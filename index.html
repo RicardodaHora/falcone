@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
@@ -8,6 +8,9 @@
       content="Falcone Patrimônio oferece soluções financeiras com atendimento consultivo, transparência e confiança para cada momento da sua vida."
     />
     <title>Falcone Patrimônio | Soluções Financeiras</title>
+    <link rel="icon" type="image/png" href="./favicon-falcone.png" />
+    <link rel="shortcut icon" href="./favicon-falcone.png" />
+    <link rel="apple-touch-icon" href="./favicon-falcone.png" />
     <link rel="stylesheet" href="./landing.css" />
   </head>
   <body>
@@ -33,7 +36,25 @@
             <a href="#contato">Contato</a>
           </nav>
 
+          <button
+            class="menu-toggle"
+            type="button"
+            aria-label="Abrir menu"
+            aria-expanded="false"
+            aria-controls="mobile-menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
           <a class="button button--gold" href="#contato">Simular agora</a>
+        </div>
+        <div class="mobile-menu" id="mobile-menu">
+          <a href="#servicos">Serviços</a>
+          <a href="#sobre">Sobre</a>
+          <a href="#como-funciona">Como funciona</a>
+          <a href="#contato">Contato</a>
         </div>
       </header>
 
@@ -367,40 +388,46 @@
               <div class="contact-list">
                 <div>
                   <strong>Telefone</strong>
-                  <span>(12) 99112-3682</span>
+                  <span>(12) 99217-9256</span>
                 </div>
                 <div>
                   <strong>E-mail</strong>
-                  <span>falconepatrimonio@gmail.com</span>
+                  <span>contato@falconepatrimonio.com.br</span>
                 </div>
                 <div>
                   <strong>Endereço</strong>
-                  <span>Rua Rubião Júnior 789, Centro - Pindamonhangaba - SP</span>
+                  <span>Rua Deputado Claro César , 76 Sala 5 Centro - Pindamonhangaba - SP</span>
                 </div>
               </div>
             </div>
 
-            <form class="contact-form">
+            <form
+              class="contact-form"
+              action="./enviar.php"
+              method="POST"
+            >
               <div class="form-grid">
-                <input type="text" placeholder="Seu nome" />
-                <input type="text" placeholder="Telefone" />
+                <input type="text" name="nome" placeholder="Seu nome" required />
+                <input type="text" name="telefone" placeholder="Telefone" inputmode="numeric" maxlength="16" required />
               </div>
-              <input type="email" placeholder="E-mail" />
-              <select>
-                <option>Tipo de crédito desejado</option>
+              <input type="email" name="email" placeholder="E-mail" required />
+              <select name="tipo_credito" required>
+                <option value="">Tipo de crédito desejado</option>
                 <option>Financiamento imobiliário</option>
                 <option>Consórcio</option>
                 <option>Crédito consignado</option>
                 <option>Antecipação do FGTS</option>
               </select>
               <textarea
+                name="mensagem"
                 rows="4"
                 placeholder="Conte brevemente o que você procura"
               ></textarea>
-              <button class="button button--gold button--full" type="button">
+              <input type="hidden" name="website" value="" />
+              <button class="button button--gold button--full" type="submit">
                 Solicitar atendimento
               </button>
-              <p class="form-note">
+              <p class="form-note" id="form-status" data-default-message="Seus dados são tratados com confidencialidade.">
                 Seus dados são tratados com confidencialidade.
               </p>
             </form>
@@ -422,5 +449,91 @@
         </div>
       </footer>
     </div>
+    <script>
+      (function () {
+        const statusElement = document.getElementById('form-status');
+        const form = document.querySelector('.contact-form');
+        const menuToggle = document.querySelector('.menu-toggle');
+        const mobileMenu = document.getElementById('mobile-menu');
+        if (!statusElement || !form) return;
+        const phoneInput = form.querySelector('input[name="telefone"]');
+
+        const params = new URLSearchParams(window.location.search);
+        const status = params.get('status');
+        const messages = {
+          ok: 'Mensagem enviada com sucesso. Em breve entraremos em contato.',
+          erro: 'Não foi possível enviar sua mensagem agora. Tente novamente.',
+          invalido: 'Preencha os campos obrigatórios antes de enviar.',
+        };
+
+        if (status && messages[status]) {
+          statusElement.textContent = messages[status];
+          statusElement.classList.add('form-note--' + status);
+        } else {
+          statusElement.textContent = statusElement.dataset.defaultMessage;
+        }
+
+        function formatBrazilPhone(value) {
+          const digits = value.replace(/\D/g, '').slice(0, 11);
+          if (digits.length === 0) return '';
+          if (digits.length <= 2) return '(' + digits;
+          if (digits.length <= 3) return '(' + digits.slice(0, 2) + ') ' + digits.slice(2);
+          if (digits.length <= 7) return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 3) + ' ' + digits.slice(3);
+          return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 3) + ' ' + digits.slice(3, 7) + '-' + digits.slice(7);
+        }
+
+        if (phoneInput) {
+          phoneInput.addEventListener('input', function () {
+            phoneInput.value = formatBrazilPhone(phoneInput.value);
+          });
+        }
+
+        if (menuToggle && mobileMenu) {
+          menuToggle.addEventListener('click', function () {
+            const isOpen = mobileMenu.classList.toggle('mobile-menu--open');
+            menuToggle.classList.toggle('menu-toggle--open', isOpen);
+            menuToggle.setAttribute('aria-expanded', String(isOpen));
+          });
+
+          mobileMenu.querySelectorAll('a').forEach(function (link) {
+            link.addEventListener('click', function () {
+              mobileMenu.classList.remove('mobile-menu--open');
+              menuToggle.classList.remove('menu-toggle--open');
+              menuToggle.setAttribute('aria-expanded', 'false');
+            });
+          });
+        }
+
+        form.addEventListener('submit', async function (event) {
+          event.preventDefault();
+
+          statusElement.textContent = 'Enviando sua mensagem...';
+          statusElement.classList.remove('form-note--ok', 'form-note--erro', 'form-note--invalido');
+
+          try {
+            const response = await fetch(form.action, {
+              method: 'POST',
+              body: new FormData(form),
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+              },
+            });
+
+            const result = await response.json();
+            const nextStatus = result.status && messages[result.status] ? result.status : 'erro';
+
+            statusElement.textContent = messages[nextStatus];
+            statusElement.classList.add('form-note--' + nextStatus);
+
+            if (nextStatus === 'ok') {
+              form.reset();
+            }
+          } catch (error) {
+            statusElement.textContent = messages.erro;
+            statusElement.classList.add('form-note--erro');
+          }
+        });
+      })();
+    </script>
   </body>
 </html>
